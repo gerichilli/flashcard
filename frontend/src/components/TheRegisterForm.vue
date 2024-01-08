@@ -1,35 +1,41 @@
 <script setup lang="ts">
+import { watch, ref } from 'vue';
 import router from '@/router';
 import { useUserStore } from '@/stores/user';
 import FormInput from './TheFormInput.vue'
 
-const userInfo = {
+const userInfo = ref({
   username: '',
   password: '',
   rePassword: ''
-}
+})
 
 const userStore = useUserStore();
 
-function updateUserInput(key: keyof typeof userInfo, value: string) {
-  userInfo[key] = value;
+function updateUserInput(key: keyof typeof userInfo.value, value: string) {
+  userInfo.value[key] = value;
 }
 
-
 function handleSubmit() {
-  if (!userInfo.password || !userInfo.username || !userInfo.rePassword) {
+  if (!userInfo.value.password || !userInfo.value.username || !userInfo.value.rePassword) {
     alert('Please input all required fields')
   }
 
   userStore.register(
-    userInfo.username,
-    userInfo.password
+    userInfo.value.username,
+    userInfo.value.password
   )
 
   if (userStore.isLogin) {
     router.push("/")
   }
 }
+
+watch(() => userStore.isLogin, () => {
+  if (userStore.isLogin) {
+    router.push("/")
+  }
+})
 </script>
 
 <template>

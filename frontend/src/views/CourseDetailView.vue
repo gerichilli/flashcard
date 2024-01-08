@@ -1,50 +1,72 @@
 <script setup lang="ts">
 import { ref, onMounted } from 'vue'
-import { RouterLink, useRoute } from 'vue-router'
-import { getCourseById, getWordsByCourseId } from '@/helpers/courses-helpers';
+import { useRoute } from 'vue-router'
 import { useUserStore } from '@/stores/user';
 import { useLearningDataStore } from '@/stores/learning-data';
-import type { course, user_kanji_status } from '@/helpers/types';
+import router from '@/router';
+import type { Kanji, Course, APIData } from '@/helpers/types';
+import API_ENDPOINTS from '@/helpers/constants';
 import Card from "../components/TheWordCard.vue"
 
+const userStore = useUserStore();
+const learningDataStore = useLearningDataStore();
+
 const route = useRoute()
-const courseData = ref<course>({
-  id: '',
+const courseData = ref<Course>({
+  id: 0,
   level: '',
   title: '',
   description: '',
   percentage: 0,
+  kanjis: []
 })
-const wordData = ref<user_kanji_status[]>([])
-const userStore = useUserStore();
-const learningDataStore = useLearningDataStore();
 
-onMounted(() => {
-  const id = route.params.id as string
-  const courseRes = getCourseById(id)
-  const wordsRes = getWordsByCourseId(id)
-  const userCourses = learningDataStore.userCourses
-  const percentage = userCourses.filter(c => c.id === id)[0] ? userCourses.filter(c => c.id === id)[0].percentage : 0
+const courseId = route.params.id as string;
 
-  learningDataStore.setUserKanji(userStore.id)
+async function handleLearning() {
+  if (userStore.isLogin) {
+    learningDataStore.setCurrentCourse(+courseId)
 
-  if (courseRes.isSuccess && courseRes.data) {
-    courseData.value = {
-      ...courseRes.data,
-      percentage
-    }
-  }
-
-  if (wordsRes.isSuccess && wordsRes.data) {
-
-    wordData.value = wordsRes.data.map(d => {
-      const isRemembered = learningDataStore.userKanjis.filter(k => k === d).length > 0
-      return {
-        kanji: d,
-        isRemembered
-      }
+    await fetch(API_ENDPOINTS.update_course, {
+      method: 'POST',
+      cache: 'no-cache',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({ user_id: userStore.id, course_id: +courseId })
     })
+
+    router.push('/learning')
+  } else {
+    router.push('/register')
   }
+
+}
+
+onMounted(async () => {
+  const res = await fetch(`${API_ENDPOINTS.course_kanji}${courseId}`);
+  const data: APIData = await res.json();
+
+  if (data.status !== "success") return;
+
+  const course = learningDataStore.userCourses.filter(c => c.id === data.data.id)[0];
+
+  if (userStore.isLogin && course) {
+    courseData.value = {
+      ...data.data,
+      percentage: course.percentage || data.data.percentage,
+      kanjis: data.data.kanjis.map((kanji: Kanji) => {
+        return {
+          ...kanji,
+          is_remembered: course.kanjis[kanji.kanji as keyof typeof course.kanjis] || false
+        }
+      })
+    }
+  } else {
+    courseData.value = data.data
+  }
+
+  console.log(courseData.value)
 })
 
 </script>
@@ -78,13 +100,14 @@ onMounted(() => {
           Details
         </h2>
         <div class="course-btn">
-          <RouterLink class="resume" to="/learning">Learn</RouterLink>
-          <button class="reset">Reset</button>
-          <button class="delete">Delete</button>
+          <button class="resume" @click="handleLearning">Learn</button>
+          <!-- <button class="reset">Reset</button>
+          <button class="delete">Delete</button> -->
         </div>
       </div>
       <div class="list">
-        <Card v-for="kanji in wordData" :key="kanji.kanji" :text="kanji.kanji" :isRemembered="kanji.isRemembered" />
+        <Card v-for="kanji in courseData.kanjis" :key="kanji.kanji" :text="kanji.kanji"
+          :isRemembered="kanji.is_remembered" />
       </div>
 
     </div>

@@ -1,8 +1,17 @@
 <script setup lang="ts">
 import { RouterLink } from 'vue-router'
+import router from '@/router';
 import { useUserStore } from '../stores/user'
+import { useLearningDataStore } from '@/stores/learning-data';
 
 const user = useUserStore();
+const learningDataStore = useLearningDataStore();
+
+function logout() {
+  user.logout()
+  learningDataStore.clearData()
+  router.push('/')
+}
 </script>
 
 <template>
@@ -20,6 +29,7 @@ const user = useUserStore();
         <RouterLink to="/login" v-if="!user.isLogin">Login</RouterLink>
         <RouterLink to="/register" v-if="!user.isLogin">Register</RouterLink>
         <p v-if="user.isLogin">Hello {{ user.username }} 💜</p>
+        <a v-if="user.isLogin" @click="logout">Logout</a>
       </nav>
     </div>
   </header>
@@ -66,6 +76,7 @@ nav {
 nav>a {
   font-weight: 500;
   color: var(--color-primary);
+  cursor: pointer;
 }
 
 @media (hover: hover) {

@@ -1,53 +1,32 @@
 <script setup lang="ts">
-import { ref, onMounted } from 'vue';
-import { useRoute } from 'vue-router';
-import type { kanji } from '../helpers/types'
-
-const kanjiData = ref<kanji>({
-  grade: 0,
-  heisig_en: '',
-  jlpt: 0,
-  kanji: '',
-  kun_readings: [],
-  meanings: [],
-  name_readings: [],
-  notes: [],
-  on_readings: [],
-  stroke_count: 0,
-  unicode: []
-})
-const route = useRoute()
-
-const fetchData = async (kanji: string) => {
-  const res = await fetch(`https://kanjiapi.dev/v1/kanji/${kanji}`)
-  const data = await res.json()
-  kanjiData.value = data
-}
-
-onMounted(() => {
-  fetchData(route.params.kanji[0])
+defineProps({
+  kanji: String,
+  kun_reading: String,
+  meanings: String,
+  on_reading: String,
+  stroke_count: Number,
 })
 </script>
 
 <template>
   <div class="card">
-    <h2 class="kanji">{{ kanjiData.kanji }}</h2>
+    <h2 class="kanji">{{ kanji }}</h2>
     <div class="info">
       <div class="line">
         <p class="label">Meanings: </p>
-        <p class="content">{{ kanjiData.meanings.join(', ') }}</p>
+        <p class="content">{{ meanings }}</p>
       </div>
       <div class="line">
         <p class="label">On Readings: </p>
-        <p class="content">{{ kanjiData.on_readings.join(', ') }}</p>
+        <p class="content">{{ on_reading }}</p>
       </div>
       <div class="line">
         <p class="label">Kun Readings: </p>
-        <p class="content">{{ kanjiData.kun_readings.join(', ') }}</p>
+        <p class="content">{{ kun_reading }}</p>
       </div>
       <div class="line">
         <p class="label">Stroke Count: </p>
-        <p class="content">{{ kanjiData.stroke_count }}</p>
+        <p class="content">{{ stroke_count }}</p>
       </div>
     </div>
   </div>
@@ -90,5 +69,6 @@ onMounted(() => {
 .label {
   width: 200px;
   font-weight: 700;
+  flex-shrink: 0;
 }
 </style>

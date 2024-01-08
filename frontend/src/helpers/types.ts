@@ -1,55 +1,44 @@
-export type user = {
-  id: string
-  username: string
-  password: string
+export type APIData = {
+  status: 'success' | 'failed'
+  message?: string
+  data?: any
 }
 
-export type course = {
-  id: string
+export type User = {
+  id: Number
+  username: string
+}
+
+export type Kanji = {
+  jlpt?: Number
+  kanji: string
+  kun_reading: string
+  meanings: string
+  on_reading: string
+  stroke_count: Number
+  is_remembered?: boolean
+}
+
+export type Course = {
+  id: Number
   level: string
   title: string
   description: string
   percentage?: Number
+  kanjis: Kanji[]
 }
 
-export type courseState = {
-  userCourses: course[]
-  userKanjis: string[]
-}
-
-export type kanji = {
-  grade: Number
-  heisig_en: string
-  jlpt: Number
-  kanji: string
-  kun_readings: string[]
-  meanings: string[]
-  name_readings: string[]
-  notes: string[]
-  on_readings: string[]
-  stroke_count: Number
-  unicode: string[]
-}
-
-export type user_course = {
-  user_id: string
-  courses: {
-    id: string
-    percentage: Number
+export type CourseState = {
+  allCourses: Course[]
+  userCourses: {
+    id: Number
+    level: string
+    title: string
+    description: string
+    percentage?: Number
+    kanjis: {
+      [key: string]: boolean
+    }
   }[]
-}
-
-export type course_kanji = {
-  course_id: string
-  words: string[]
-}
-
-export type user_kanji = {
-  user_id: string
-  words: string[]
-}
-
-export type user_kanji_status = {
-  kanji: string
-  isRemembered?: boolean
+  currentCourse: number | undefined
 }

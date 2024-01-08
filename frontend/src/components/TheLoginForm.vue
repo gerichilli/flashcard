@@ -1,38 +1,41 @@
 <script setup lang="ts">
-import { watch } from 'vue'
+import { watch, ref } from 'vue'
 import router from '@/router';
 import { useUserStore } from '@/stores/user';
+import { useLearningDataStore } from '@/stores/learning-data';
 import FormInput from './TheFormInput.vue'
 
-const userInfo = {
+const userInfo = ref({
   username: '',
   password: ''
-}
+})
 
 const userStore = useUserStore();
+const learningDataStore = useLearningDataStore();
 
-function updateUserInput(key: keyof typeof userInfo, value: string) {
-  userInfo[key] = value;
+function updateUserInput(key: keyof typeof userInfo.value, value: string) {
+  userInfo.value[key] = value;
 }
 
-
 function handleSubmit() {
-  if (!userInfo.password || !userInfo.username) {
+  if (!userInfo.value.password || !userInfo.value.username) {
     alert('Please input all required fields')
   }
 
   userStore.login(
-    userInfo.username,
-    userInfo.password
+    userInfo.value.username,
+    userInfo.value.password
   )
 
   if (userStore.isLogin) {
+    learningDataStore.updateUserCourse(+userStore.id)
     router.push("/courses")
   }
 }
 
 watch(() => userStore.isLogin, () => {
   if (userStore.isLogin) {
+    learningDataStore.updateUserCourse(+userStore.id)
     router.push("/courses")
   }
 })

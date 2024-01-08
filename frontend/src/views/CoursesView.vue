@@ -1,30 +1,15 @@
 <script setup lang="ts">
-import { onMounted, ref } from 'vue';
+import { onMounted } from 'vue';
 import { useUserStore } from '@/stores/user';
 import { useLearningDataStore } from '@/stores/learning-data';
-import { getAllCourseHelper } from '@/helpers/courses-helpers'
-import Course from "../components/TheCourse.vue"
-import type { course } from "../helpers/types"
+import CourseComponent from "../components/TheCourse.vue"
 
 const userStore = useUserStore();
 const learningDataStore = useLearningDataStore();
-const allCourses = ref<course[]>([])
 
 onMounted(async () => {
-  try {
-    const response = await fetch('http://localhost:5000/courses');
-    if (!response.ok) {
-      allCourses.value = []
-    }
-    const courses = await response.json();
-    allCourses.value = courses;
-  } catch (error) {
-    console.error('Fetch error: ', error);
-  }
-
-  if (userStore.isLogin) {
-    learningDataStore.setUserCourses(userStore.id);
-  }
+  learningDataStore.updateAllCourse()
+  learningDataStore.updateUserCourse(+userStore.id)
 });
 </script>
 
@@ -34,16 +19,17 @@ onMounted(async () => {
       <div class="courses" v-if="userStore.isLogin">
         <h2>Your courses</h2>
         <div class="course-list">
-          <Course v-for="course in learningDataStore.userCourses" :key="course.id" :id="course.id" :level="course.level"
-            :title="course.title" :description="course.description" :percentage="course.percentage?.valueOf()"
-            isDisplayPercentage />
+          <CourseComponent v-for="course in learningDataStore.userCourses" :key="course.id.toString()"
+            :id="course.id.toString()" :level="course.level" :title="course.title" :description="course.description"
+            :percentage="course.percentage?.valueOf()" isDisplayPercentage />
         </div>
       </div>
       <div class="courses">
         <h2>All courses</h2>
         <div class="course-list">
-          <Course v-for="course in allCourses" :key="course.id" :id="course.id" :level="course.level"
-            :title="course.title" :description="course.description" :percentage=0 :isDisplayPercentage="false" />
+          <CourseComponent v-for="course in learningDataStore.allCourses" :key="course.id.toString()"
+            :id="course.id.toString()" :level="course.level" :title="course.title" :description="course.description"
+            :percentage=0 :isDisplayPercentage="false" />
         </div>
       </div>
     </div>

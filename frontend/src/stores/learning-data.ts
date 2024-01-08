@@ -1,27 +1,48 @@
 import { defineStore } from 'pinia'
-import { getUserCourses, getUserWords } from '@/helpers/courses-helpers'
-import type { courseState } from '../helpers/types'
+import type { CourseState, APIData } from '@/helpers/types'
+import API_ENDPOINTS from '@/helpers/constants'
 
 export const useLearningDataStore = defineStore('learning-data', {
-  state: (): courseState => ({
+  state: (): CourseState => ({
+    allCourses: [],
     userCourses: [],
-    userKanjis: []
+    currentCourse: undefined
   }),
 
   actions: {
-    setUserCourses(user_id: string) {
-      const res = getUserCourses(user_id)
+    async updateAllCourse() {
+      try {
+        const res = await fetch(API_ENDPOINTS.courses)
+        const data: APIData = await res.json()
 
-      if (res.isSuccess && res.data) {
-        this.userCourses = res.data
+        if (data.status === 'success') {
+          this.allCourses = data.data
+        }
+      } catch (error) {
+        this.allCourses = []
+        console.error('Fetch error: ', error)
       }
     },
-    setUserKanji(user_id: string) {
-      const res = getUserWords(user_id)
+    async updateUserCourse(user_id: number) {
+      try {
+        const res = await fetch(`${API_ENDPOINTS.user_courses}${user_id}`)
+        const data: APIData = await res.json()
 
-      if (res.isSuccess && res.data) {
-        this.userKanjis = res.data
+        if (data.status === 'success') {
+          this.userCourses = data.data
+        }
+      } catch (error) {
+        this.userCourses = []
+        console.error('Fetch error: ', error)
       }
+    },
+    setCurrentCourse(course_id: number | undefined) {
+      this.currentCourse = course_id
+    },
+    clearData() {
+      this.allCourses = []
+      this.userCourses = []
+      this.currentCourse = undefined
     }
   }
 })
