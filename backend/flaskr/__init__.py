@@ -261,6 +261,7 @@ def create_app(test_config=None):
         c.execute("""
                 INSERT INTO user_course
                 VALUES (?, ?, ?)
+                ON DUPLICATE KEY UPDATE percentage = percentage;
             """, (user_id, course_id, 0))
 
         conn.commit()
